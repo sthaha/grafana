@@ -160,7 +160,7 @@ export function refreshExplore(exploreId: ExploreId, newUrlQuery: string): Thunk
 
     for (let index = 0; index < queries.length; index++) {
       const query = queries[index];
-      refreshQueries.push(generateNewKeyAndAddRefIdIfMissing(query, refreshQueries, index));
+      refreshQueries.push(generateNewKeyAndAddRefIdIfMissing(query, refreshQueries));
     }
 
     const timeZone = getTimeZone(getState().user);

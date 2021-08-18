@@ -33,7 +33,6 @@ const dummyProps: Props = {
   scanStart: jest.fn(),
   scanStopAction: scanStopAction,
   setQueries: jest.fn(),
-  queryKeys: [],
   isLive: false,
   syncedTimes: false,
   updateTimeRange: jest.fn(),

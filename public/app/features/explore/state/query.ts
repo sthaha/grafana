@@ -45,31 +45,20 @@ import { createEmptyQueryResponse, createCacheKey, getResultsFromCache } from '.
  */
 export interface AddQueryRowPayload {
   exploreId: ExploreId;
-  index: number;
   query: DataQuery;
 }
 export const addQueryRowAction = createAction<AddQueryRowPayload>('explore/addQueryRow');
 
 /**
- * Remove query row of the given index, as well as associated query results.
- */
-export interface RemoveQueryRowPayload {
-  exploreId: ExploreId;
-  index: number;
-}
-export const removeQueryRowAction = createAction<RemoveQueryRowPayload>('explore/removeQueryRow');
-
-/**
  * Query change handler for the query row with the given index.
  * If `override` is reset the query modifications and run the queries. Use this to set queries via a link.
  */
-export interface ChangeQueryPayload {
+export interface ChangeQueriesPayload {
   exploreId: ExploreId;
-  query: DataQuery;
-  index: number;
+  queries: DataQuery[];
   override: boolean;
 }
-export const changeQueryAction = createAction<ChangeQueryPayload>('explore/changeQuery');
+export const changeQueriesAction = createAction<ChangeQueriesPayload>('explore/changeQueries');
 
 /**
  * Clear all queries and results.
@@ -184,12 +173,12 @@ export const clearCacheAction = createAction<ClearCachePayload>('explore/clearCa
 /**
  * Adds a query row after the row with the given index.
  */
-export function addQueryRow(exploreId: ExploreId, index: number): ThunkResult<void> {
+export function addQueryRow(exploreId: ExploreId): ThunkResult<void> {
   return (dispatch, getState) => {
     const queries = getState().explore[exploreId]!.queries;
-    const query = generateEmptyQuery(queries, index);
+    const query = generateEmptyQuery(queries);
 
-    dispatch(addQueryRowAction({ exploreId, index, query }));
+    dispatch(addQueryRowAction({ exploreId, query }));
   };
 }
 
@@ -197,21 +186,16 @@ export function addQueryRow(exploreId: ExploreId, index: number): ThunkResult<vo
  * Query change handler for the query row with the given index.
  * If `override` is reset the query modifications and run the queries. Use this to set queries via a link.
  */
-export function changeQuery(
-  exploreId: ExploreId,
-  query: DataQuery,
-  index: number,
-  override = false
-): ThunkResult<void> {
+export function changeQueries(exploreId: ExploreId, queries: DataQuery[], override = false): ThunkResult<void> {
   return (dispatch, getState) => {
     // Null query means reset
-    if (query === null) {
-      const queries = getState().explore[exploreId]!.queries;
-      const { refId, key } = queries[index];
-      query = generateNewKeyAndAddRefIdIfMissing({ refId, key }, queries, index);
-    }
+    // if (queries === []) {
+    //   const queries = getState().explore[exploreId]!.queries;
+    //   const { refId, key } = queries[index];
+    //   query = generateNewKeyAndAddRefIdIfMissing({ refId, key }, queries, index);
+    // }
 
-    dispatch(changeQueryAction({ exploreId, query, index, override }));
+    dispatch(changeQueriesAction({ exploreId, queries, override }));
     if (override) {
       dispatch(runQueries(exploreId));
     }
@@ -453,7 +437,7 @@ export function setQueries(exploreId: ExploreId, rawQueries: DataQuery[]): Thunk
   return (dispatch, getState) => {
     // Inject react keys into query objects
     const queries = getState().explore[exploreId]!.queries;
-    const nextQueries = rawQueries.map((query, index) => generateNewKeyAndAddRefIdIfMissing(query, queries, index));
+    const nextQueries = rawQueries.map((query) => generateNewKeyAndAddRefIdIfMissing(query, queries));
     dispatch(setQueriesAction({ exploreId, queries: nextQueries }));
     dispatch(runQueries(exploreId));
   };
@@ -507,10 +491,10 @@ export function clearCache(exploreId: ExploreId): ThunkResult<void> {
 export const queryReducer = (state: ExploreItemState, action: AnyAction): ExploreItemState => {
   if (addQueryRowAction.match(action)) {
     const { queries } = state;
-    const { index, query } = action.payload;
+    const { query } = action.payload;
 
     // Add to queries, which will cause a new row to be rendered
-    const nextQueries = [...queries.slice(0, index + 1), { ...query }, ...queries.slice(index + 1)];
+    const nextQueries = [...queries, query];
 
     return {
       ...state,
@@ -520,18 +504,18 @@ export const queryReducer = (state: ExploreItemState, action: AnyAction): Explor
     };
   }
 
-  if (changeQueryAction.match(action)) {
-    const { queries } = state;
-    const { query, index } = action.payload;
+  if (changeQueriesAction.match(action)) {
+    // const { queries: oldQueries } = state;
+    const { queries } = action.payload;
 
-    // Override path: queries are completely reset
-    const nextQuery: DataQuery = generateNewKeyAndAddRefIdIfMissing(query, queries, index);
-    const nextQueries = [...queries];
-    nextQueries[index] = nextQuery;
+    // // Override path: queries are completely reset
+    // const nextQuery: DataQuery = generateNewKeyAndAddRefIdIfMissing(query, queries, index);
+    // const nextQueries = [...queries];
+    // nextQueries[index] = nextQuery;
 
     return {
       ...state,
-      queries: nextQueries,
+      queries,
     };
   }
 
@@ -567,14 +551,14 @@ export const queryReducer = (state: ExploreItemState, action: AnyAction): Explor
       // Modify all queries
       nextQueries = queries.map((query, i) => {
         const nextQuery = modifier({ ...query }, modification);
-        return generateNewKeyAndAddRefIdIfMissing(nextQuery, queries, i);
+        return generateNewKeyAndAddRefIdIfMissing(nextQuery, queries);
       });
     } else {
       // Modify query only at index
       nextQueries = queries.map((query, i) => {
         if (i === index) {
           const nextQuery = modifier({ ...query }, modification);
-          return generateNewKeyAndAddRefIdIfMissing(nextQuery, queries, i);
+          return generateNewKeyAndAddRefIdIfMissing(nextQuery, queries);
         }
 
         return query;
@@ -583,33 +567,6 @@ export const queryReducer = (state: ExploreItemState, action: AnyAction): Explor
     return {
       ...state,
       queries: nextQueries,
-      queryKeys: getQueryKeys(nextQueries, state.datasourceInstance),
-    };
-  }
-
-  if (removeQueryRowAction.match(action)) {
-    const { queries } = state;
-    const { index } = action.payload;
-
-    if (queries.length <= 1) {
-      return state;
-    }
-
-    // removes a query under a given index and reassigns query keys and refIds to keep everything in order
-    const queriesAfterRemoval: DataQuery[] = [...queries.slice(0, index), ...queries.slice(index + 1)].map((query) => {
-      return { ...query, refId: '' };
-    });
-
-    const nextQueries: DataQuery[] = [];
-
-    queriesAfterRemoval.forEach((query, i) => {
-      nextQueries.push(generateNewKeyAndAddRefIdIfMissing(query, nextQueries, i));
-    });
-
-    return {
-      ...state,
-      queries: nextQueries,
-      logsHighlighterExpressions: undefined,
       queryKeys: getQueryKeys(nextQueries, state.datasourceInstance),
     };
   }

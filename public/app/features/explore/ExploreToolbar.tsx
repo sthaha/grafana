@@ -121,6 +121,7 @@ export class UnConnectedExploreToolbar extends PureComponent<Props> {
                   )}
                 >
                   <DataSourcePicker
+                    mixed
                     onChange={this.onChangeDatasource}
                     current={this.props.datasourceName}
                     hideTextValue={showSmallDataSourcePicker}

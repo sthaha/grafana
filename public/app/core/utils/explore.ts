@@ -242,16 +242,16 @@ export function parseUrlState(initial: string | undefined): ExploreUrlState {
   return { datasource, queries, range, originPanelId };
 }
 
-export function generateKey(index = 0): string {
-  return `Q-${uuidv4()}-${index}`;
+export function generateKey(): string {
+  return `Q-${uuidv4()}`;
 }
 
 export function generateEmptyQuery(queries: DataQuery[], index = 0): DataQuery {
-  return { refId: getNextRefIdChar(queries), key: generateKey(index) };
+  return { refId: getNextRefIdChar(queries), key: generateKey() };
 }
 
-export const generateNewKeyAndAddRefIdIfMissing = (target: DataQuery, queries: DataQuery[], index = 0): DataQuery => {
-  const key = generateKey(index);
+export const generateNewKeyAndAddRefIdIfMissing = (target: DataQuery, queries: DataQuery[]): DataQuery => {
+  const key = generateKey();
   const refId = target.refId || getNextRefIdChar(queries);
 
   return { ...target, refId, key };
@@ -265,7 +265,7 @@ export function ensureQueries(queries?: DataQuery[]): DataQuery[] {
     const allQueries = [];
     for (let index = 0; index < queries.length; index++) {
       const query = queries[index];
-      const key = generateKey(index);
+      const key = generateKey();
       let refId = query.refId;
       if (!refId) {
         refId = getNextRefIdChar(allQueries);

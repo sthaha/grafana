@@ -11,7 +11,7 @@ import { selectors } from '@grafana/e2e-selectors';
 import { ExploreItemState, ExploreId } from 'app/types/explore';
 import { highlightLogsExpressionAction } from './state/explorePane';
 import { ErrorContainer } from './ErrorContainer';
-import { changeQuery, modifyQueries, removeQueryRowAction, runQueries } from './state/query';
+import { modifyQueries, runQueries } from './state/query';
 import { HelpToggle } from '../query/components/HelpToggle';
 
 interface OwnProps {
@@ -38,27 +38,9 @@ export class QueryRow extends PureComponent<QueryRowProps, QueryRowState> {
     this.props.runQueries(exploreId);
   };
 
-  onChange = (query: DataQuery, override?: boolean) => {
-    const { datasourceInstance, exploreId, index } = this.props;
-    this.props.changeQuery(exploreId, query, index, override);
-    if (query && !override && datasourceInstance?.getHighlighterExpression && index === 0) {
-      // Live preview of log search matches. Only use on first row for now
-      this.updateLogsHighlights(query);
-    }
-  };
-
-  onClickToggleDisabled = () => {
-    const { exploreId, index, query } = this.props;
-    const newQuery = {
-      ...query,
-      hide: !query.hide,
-    };
-    this.props.changeQuery(exploreId, newQuery, index, true);
-  };
-
   onClickRemoveButton = () => {
-    const { exploreId, index } = this.props;
-    this.props.removeQueryRowAction({ exploreId, index });
+    const { exploreId } = this.props;
+    // this.props.removeQueryRowAction({ exploreId, index });
     this.props.runQueries(exploreId);
   };
 
@@ -97,7 +79,7 @@ export class QueryRow extends PureComponent<QueryRowProps, QueryRowState> {
           history={history}
           onRunQuery={this.onRunQuery}
           onBlur={noopOnBlur}
-          onChange={this.onChange}
+          onChange={() => {}}
           data={queryResponse}
           range={range}
           exploreId={exploreId}
@@ -108,7 +90,7 @@ export class QueryRow extends PureComponent<QueryRowProps, QueryRowState> {
         <AngularQueryEditor
           error={queryErrors}
           datasource={datasourceInstance}
-          onQueryChange={this.onChange}
+          onQueryChange={() => {}}
           onExecuteQuery={this.onRunQuery}
           initialQuery={query}
           exploreEvents={exploreEvents}
@@ -163,7 +145,7 @@ export class QueryRow extends PureComponent<QueryRowProps, QueryRowState> {
             isNotStarted={isNotStarted}
             latency={latency}
             onClickToggleEditorMode={this.onClickToggleEditorMode}
-            onClickToggleDisabled={this.onClickToggleDisabled}
+            onClickToggleDisabled={() => {}}
             onClickRemoveButton={this.onClickRemoveButton}
           />
         </div>
@@ -192,10 +174,8 @@ function mapStateToProps(state: StoreState, { exploreId, index }: OwnProps) {
 }
 
 const mapDispatchToProps = {
-  changeQuery,
   highlightLogsExpressionAction,
   modifyQueries,
-  removeQueryRowAction,
   runQueries,
 };
 
