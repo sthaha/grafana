@@ -1420,6 +1420,79 @@ describe('DashboardModel', () => {
       expect(model.panels[0].panels[0].fieldConfig.defaults).toEqual(undefined);
     });
   });
+
+  describe('when migrating CloudWatch query', () => {
+    let model: any;
+    let panelTargets: any;
+
+    beforeEach(() => {
+      model = new DashboardModel({
+        panels: [
+          {
+            gridPos: {
+              h: 8,
+              w: 12,
+              x: 0,
+              y: 0,
+            },
+            id: 4,
+            options: {
+              legend: {
+                calcs: [],
+                displayMode: 'list',
+                placement: 'bottom',
+              },
+              tooltipOptions: {
+                mode: 'single',
+              },
+            },
+            targets: [
+              {
+                alias: '',
+                dimensions: {
+                  InstanceId: 'i-00645d91ed77d87ac',
+                },
+                expression: '',
+                id: '',
+                matchExact: true,
+                metricName: 'CPUUtilization',
+                namespace: 'AWS/EC2',
+                period: '',
+                refId: 'B',
+                region: 'default',
+                statistics: ['Average', 'Minimum', 'p12.21'],
+              },
+            ],
+            title: 'Panel Title',
+            type: 'timeseries',
+          },
+        ],
+      });
+      panelTargets = model.panels[0].targets;
+    });
+
+    it('multiple stats query should have been split into three', () => {
+      expect(panelTargets.length).toBe(3);
+    });
+
+    it('new stats query should get the right statistic', () => {
+      expect(panelTargets[0].statistic).toBe('Average');
+      expect(panelTargets[1].statistic).toBe('Minimum');
+      expect(panelTargets[2].statistic).toBe('p12.21');
+    });
+
+    it('new stats query should get the right ref id', () => {
+      expect(panelTargets[0].refId).toBe('B');
+      expect(panelTargets[1].refId).toBe('A');
+      expect(panelTargets[2].refId).toBe('C');
+    });
+
+    it('the deprecated statistics prop should be removed', () => {
+      expect(panelTargets[0].refId).not.toHaveProperty('statistics');
+      expect(panelTargets[1].refId).not.toHaveProperty('statistics');
+      expect(panelTargets[2].refId).not.toHaveProperty('statistics');
+    });
+  });
 });
 
 function createRow(options: any, panelDescriptions: any[]) {
