@@ -543,22 +543,32 @@ export class CloudWatchDatasource extends DataSourceWithBackend<CloudWatchQuery,
         };
       }),
       catchError((err) => {
-        if (/^Throttling:.*/.test(err.data.message)) {
+        const isFrameError = err.data.results;
+
+        // Error is not frame specific
+        if (!isFrameError && err.data && err.data.message === 'Metric request error' && err.data.error) {
+          err.message = err.data.error;
+          return throwError(() => err);
+        }
+
+        // The error is either for a specific frame or for all the frames
+        const results: Array<{ error?: string }> = Object.values(err.data.results);
+        const firstErrorResult = results.find((r) => r.error);
+        if (firstErrorResult) {
+          err.message = firstErrorResult.error;
+        }
+
+        if (results.some((r) => r.error && /^Throttling:.*/.test(r.error))) {
           const failedRedIds = Object.keys(err.data.results);
           const regionsAffected = Object.values(request.queries).reduce(
             (res: string[], { refId, region }) =>
               (refId && !failedRedIds.includes(refId)) || res.includes(region) ? res : [...res, region],
             []
           ) as string[];
-
           regionsAffected.forEach((region) => this.debouncedAlert(this.datasourceName, this.getActualRegion(region)));
         }
 
-        if (err.data && err.data.message === 'Metric request error' && err.data.error) {
-          err.data.message = err.data.error;
-        }
-
-        return throwError(err);
+        return throwError(() => err);
       })
     );
   }

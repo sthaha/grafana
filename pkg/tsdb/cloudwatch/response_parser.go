@@ -28,7 +28,6 @@ func (e *cloudWatchExecutor) parseResponse(startTime time.Time, endTime time.Tim
 
 		if response.HasArithmeticError {
 			dataRes.Error = fmt.Errorf("ArithmeticError in query %q: %s", queryRow.RefId, response.ArithmeticErrorMessage)
-			continue
 		}
 
 		var err error
