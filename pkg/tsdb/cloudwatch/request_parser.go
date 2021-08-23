@@ -136,7 +136,7 @@ func parseRequestQuery(model *simplejson.Json, refId string, startTime time.Time
 	if id == "" {
 		// Why not just use refId if id is not specified in the frontend? When specifying an id in the editor,
 		// and alphabetical must be used. The id must be unique, so if an id like for example a, b or c would be used,
-		// it would likely collide with some ref id. That's why the `query` prefix is used. 
+		// it would likely collide with some ref id. That's why the `query` prefix is used.
 		id = fmt.Sprintf("query%s", refId)
 	}
 	expression := model.Get("expression").MustString("")
