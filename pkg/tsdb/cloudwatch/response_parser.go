@@ -46,16 +46,16 @@ func (e *cloudWatchExecutor) parseResponse(startTime time.Time, endTime time.Tim
 	return results, nil
 }
 
-func aggregateResponse(metricDataOutputs []*cloudwatch.GetMetricDataOutput) map[string]queryRowResponse {
+func aggregateResponse(getMetricDataOutputs []*cloudwatch.GetMetricDataOutput) map[string]queryRowResponse {
 	responseByID := make(map[string]queryRowResponse)
-	for _, mdo := range metricDataOutputs {
+	for _, gmdo := range getMetricDataOutputs {
 		requestExceededMaxLimit := false
-		for _, message := range mdo.Messages {
+		for _, message := range gmdo.Messages {
 			if *message.Code == "MaxMetricsExceeded" {
 				requestExceededMaxLimit = true
 			}
 		}
-		for _, r := range mdo.MetricDataResults {
+		for _, r := range gmdo.MetricDataResults {
 			id := *r.Id
 			label := *r.Label
 

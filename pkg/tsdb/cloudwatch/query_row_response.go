@@ -2,6 +2,7 @@ package cloudwatch
 
 import "github.com/aws/aws-sdk-go/service/cloudwatch"
 
+// queryRowResponse represents the GetMetricData response for a query row in the query editor.
 type queryRowResponse struct {
 	ID                      string
 	RequestExceededMaxLimit bool

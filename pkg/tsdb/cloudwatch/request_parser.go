@@ -14,7 +14,7 @@ import (
 	"github.com/grafana/grafana/pkg/components/simplejson"
 )
 
-// parses the json queries and returns a map of cloudWatchQueries by region. The cloudWatchQuery has a 1 to 1 mapping to a query editor row
+// parseQueries parses the json queries and returns a map of cloudWatchQueries by region. The cloudWatchQuery has a 1 to 1 mapping to a query editor row
 func (e *cloudWatchExecutor) parseQueries(queries []backend.DataQuery, startTime time.Time, endTime time.Time) (map[string][]*cloudWatchQuery, error) {
 	requestQueries := make(map[string][]*cloudWatchQuery)
 	migratedQueries, err := migrateLegacyQuery(queries, startTime, endTime)
@@ -51,6 +51,7 @@ func (e *cloudWatchExecutor) parseQueries(queries []backend.DataQuery, startTime
 // migrateLegacyQuery migrates queries that has a `statistics` field to use the `statistic` field instead.
 // This migration is also done in the frontend, so this should only ever be needed for alerting queries
 // In case the query used more than one stat, the first stat in the slice will be used in the statistic field
+// Read more here https://github.com/grafana/grafana/issues/30629
 func migrateLegacyQuery(queries []backend.DataQuery, startTime time.Time, endTime time.Time) ([]*backend.DataQuery, error) {
 	migratedQueries := []*backend.DataQuery{}
 	for _, q := range queries {

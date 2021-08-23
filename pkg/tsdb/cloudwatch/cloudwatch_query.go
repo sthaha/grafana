@@ -78,7 +78,7 @@ func (q *cloudWatchQuery) buildDeepLink(startTime time.Time, endTime time.Time) 
 		return "", nil
 	}
 
-	cloudWatchLinkProps := &cloudWatchLink{
+	link := &cloudWatchLink{
 		Title:   q.RefId,
 		View:    "timeSeries",
 		Stacked: false,
@@ -88,7 +88,7 @@ func (q *cloudWatchQuery) buildDeepLink(startTime time.Time, endTime time.Time) 
 	}
 
 	if q.isSearchExpression() {
-		cloudWatchLinkProps.Metrics = []interface{}{&metricExpression{Expression: q.UsedExpression}}
+		link.Metrics = []interface{}{&metricExpression{Expression: q.UsedExpression}}
 	} else {
 		metricStat := []interface{}{q.Namespace, q.MetricName}
 		for dimensionKey, dimensionValues := range q.Dimensions {
@@ -98,10 +98,10 @@ func (q *cloudWatchQuery) buildDeepLink(startTime time.Time, endTime time.Time) 
 			Stat:   q.Statistic,
 			Period: q.Period,
 		})
-		cloudWatchLinkProps.Metrics = []interface{}{metricStat}
+		link.Metrics = []interface{}{metricStat}
 	}
 
-	linkProps, err := json.Marshal(cloudWatchLinkProps)
+	linkProps, err := json.Marshal(link)
 	if err != nil {
 		return "", fmt.Errorf("could not marshal link: %w", err)
 	}
