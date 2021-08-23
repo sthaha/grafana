@@ -681,24 +681,33 @@ export class DashboardMigrator {
   migrateCloudWatchQueries() {
     for (const panel of this.dashboard.panels) {
       for (const target of panel.targets) {
-        // TODO: Check that this is a CloudWatch query in a better way
-        if (target.hasOwnProperty('dimensions') && target.hasOwnProperty('namespace')) {
-          const newTargets = [];
+        if (this.isLegacyCloudWatchQuery(target)) {
+          const newQueryRows = [];
           const cloudWatchQuery = target as CloudWatchMetricsQuery;
           if (cloudWatchQuery?.statistics && cloudWatchQuery?.statistics.length > 1) {
             for (const stat of cloudWatchQuery.statistics.splice(1)) {
-              newTargets.push({ ...cloudWatchQuery, statistic: stat });
+              newQueryRows.push({ ...cloudWatchQuery, statistic: stat });
             }
             cloudWatchQuery.statistic = cloudWatchQuery.statistics[0];
           }
-          for (const newTarget of newTargets) {
+          for (const newTarget of newQueryRows) {
             newTarget.refId = getNextRefIdChar(panel.targets);
             delete newTarget.statistics;
             panel.targets.push(newTarget);
           }
+          delete cloudWatchQuery.statistics;
         }
       }
     }
+  }
+
+  isLegacyCloudWatchQuery(target: any) {
+    return (
+      target.hasOwnProperty('dimensions') &&
+      target.hasOwnProperty('namespace') &&
+      target.hasOwnProperty('region') &&
+      target.hasOwnProperty('statistics')
+    );
   }
 
   upgradeToGridLayout(old: any) {
