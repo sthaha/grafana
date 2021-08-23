@@ -120,7 +120,7 @@ export function MetricsQueryFieldsEditor({
             />
           </QueryInlineField>
 
-          <QueryInlineField label="Stats">
+          <QueryInlineField label="Statistic">
             <Segment
               allowCustomValue
               value={query.statistic}
@@ -129,7 +129,11 @@ export function MetricsQueryFieldsEditor({
                 variableOptionGroup,
               ]}
               onChange={({ value: statistic }) => {
-                if (!datasource.standardStatistics.includes(statistic) && !/^p\d{2}(?:\.\d{1,2})?$/.test(statistic)) {
+                if (
+                  !datasource.standardStatistics.includes(statistic) &&
+                  !/^p\d{2}(?:\.\d{1,2})?$/.test(statistic) &&
+                  !statistic.startsWith('$')
+                ) {
                   return;
                 }
 
