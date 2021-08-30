@@ -142,24 +142,24 @@ func filterAlarms(alarms *cloudwatch.DescribeAlarmsOutput, namespace string, met
 			continue
 		}
 
-		match := true
+		matchDimension := true
 		if len(dimensions) != 0 {
 			if len(alarm.Dimensions) != len(dimensions) {
-				match = false
+				matchDimension = false
 			} else {
 				for _, d := range alarm.Dimensions {
 					if _, ok := dimensions[*d.Name]; !ok {
-						match = false
+						matchDimension = false
 					}
 				}
 			}
 		}
-		if !match {
+		if !matchDimension {
 			continue
 		}
 
-		if *alarm.Statistic == statistic {
-			break
+		if *alarm.Statistic != statistic {
+			continue
 		}
 
 		if period != 0 && *alarm.Period != period {
