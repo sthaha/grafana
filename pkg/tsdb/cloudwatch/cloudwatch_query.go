@@ -112,11 +112,11 @@ func (q *cloudWatchQuery) buildDeepLink(startTime time.Time, endTime time.Time) 
 	}
 
 	fragment := url.Query()
-	fragment.Set("", string(linkProps))
+	fragment.Set("graph", string(linkProps))
 
 	query := url.Query()
 	query.Set("region", q.Region)
 	url.RawQuery = query.Encode()
 
-	return fmt.Sprintf(`%s#metricsV2:graph%s`, url.String(), fragment.Encode()), nil
+	return fmt.Sprintf(`%s#metricsV2:%s`, url.String(), fragment.Encode()), nil
 }

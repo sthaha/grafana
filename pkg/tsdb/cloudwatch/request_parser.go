@@ -64,7 +64,10 @@ func migrateLegacyQuery(queries []backend.DataQuery, startTime time.Time, endTim
 		_, err = model.Get("statistic").String()
 		// If there's not a statistic property in the json, we know it's the legacy format and then it has to be migrated
 		if err != nil {
-			stats := model.Get("statistics").MustStringArray()
+			stats, err := model.Get("statistics").StringArray()
+			if err != nil {
+				return nil, fmt.Errorf("query must have either statistic or statistics field")
+			}
 			model.Del("statistics")
 			model.Set("statistic", stats[0])
 			query.JSON, err = model.MarshalJSON()

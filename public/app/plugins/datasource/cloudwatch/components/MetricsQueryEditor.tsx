@@ -65,8 +65,7 @@ export class MetricsQueryEditor extends PureComponent<Props, State> {
   }
 
   getExecutedQueryPreview(data?: PanelData): ExecutedQueryPreview {
-    // if (!(data && data?.series.length && data?.series[0].meta && data?.series[0].meta && data?.series[0].meta.custom)) {
-    if (!(data?.series.length && data?.series[0].meta && data?.series[0].meta && data?.series[0].meta.custom)) {
+    if (!(data?.series.length && data?.series[0].meta?.custom)) {
       return {
         executedQuery: '',
         period: '',
