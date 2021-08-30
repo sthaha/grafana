@@ -34,7 +34,7 @@ func (q *queryRowResponse) addMetricDataResult(mdr *cloudwatch.MetricDataResult)
 }
 
 func (q *queryRowResponse) appendTimeSeries(mdr *cloudwatch.MetricDataResult) {
-	if _, exists := q.Metrics[*mdr.Label]; !exists { 
+	if _, exists := q.Metrics[*mdr.Label]; !exists {
 		q.Metrics[*mdr.Label] = &cloudwatch.MetricDataResult{}
 	}
 	metric := q.Metrics[*mdr.Label]
