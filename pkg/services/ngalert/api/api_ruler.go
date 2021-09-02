@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/ngalert/state"
 	"github.com/grafana/grafana/pkg/services/ngalert/store"
 	"github.com/grafana/grafana/pkg/services/quota"
+	"gopkg.in/macaron.v1"
 
 	"github.com/grafana/grafana/pkg/api/apierrors"
 	"github.com/grafana/grafana/pkg/api/response"
@@ -29,7 +30,7 @@ type RulerSrv struct {
 }
 
 func (srv RulerSrv) RouteDeleteNamespaceRulesConfig(c *models.ReqContext) response.Response {
-	namespaceTitle := c.Params(":Namespace")
+	namespaceTitle := macaron.Vars(c.Req)[":Namespace"]
 	namespace, err := srv.store.GetNamespaceByTitle(namespaceTitle, c.SignedInUser.OrgId, c.SignedInUser, true)
 	if err != nil {
 		return toNamespaceErrorResponse(err)
@@ -48,12 +49,12 @@ func (srv RulerSrv) RouteDeleteNamespaceRulesConfig(c *models.ReqContext) respon
 }
 
 func (srv RulerSrv) RouteDeleteRuleGroupConfig(c *models.ReqContext) response.Response {
-	namespaceTitle := c.Params(":Namespace")
+	namespaceTitle := macaron.Vars(c.Req)[":Namespace"]
 	namespace, err := srv.store.GetNamespaceByTitle(namespaceTitle, c.SignedInUser.OrgId, c.SignedInUser, true)
 	if err != nil {
 		return toNamespaceErrorResponse(err)
 	}
-	ruleGroup := c.Params(":Groupname")
+	ruleGroup := macaron.Vars(c.Req)[":Groupname"]
 	uids, err := srv.store.DeleteRuleGroupAlertRules(c.SignedInUser.OrgId, namespace.Uid, ruleGroup)
 
 	if err != nil {
@@ -71,7 +72,7 @@ func (srv RulerSrv) RouteDeleteRuleGroupConfig(c *models.ReqContext) response.Re
 }
 
 func (srv RulerSrv) RouteGetNamespaceRulesConfig(c *models.ReqContext) response.Response {
-	namespaceTitle := c.Params(":Namespace")
+	namespaceTitle := macaron.Vars(c.Req)[":Namespace"]
 	namespace, err := srv.store.GetNamespaceByTitle(namespaceTitle, c.SignedInUser.OrgId, c.SignedInUser, false)
 	if err != nil {
 		return toNamespaceErrorResponse(err)
@@ -112,13 +113,13 @@ func (srv RulerSrv) RouteGetNamespaceRulesConfig(c *models.ReqContext) response.
 }
 
 func (srv RulerSrv) RouteGetRulegGroupConfig(c *models.ReqContext) response.Response {
-	namespaceTitle := c.Params(":Namespace")
+	namespaceTitle := macaron.Vars(c.Req)[":Namespace"]
 	namespace, err := srv.store.GetNamespaceByTitle(namespaceTitle, c.SignedInUser.OrgId, c.SignedInUser, false)
 	if err != nil {
 		return toNamespaceErrorResponse(err)
 	}
 
-	ruleGroup := c.Params(":Groupname")
+	ruleGroup := macaron.Vars(c.Req)[":Groupname"]
 	q := ngmodels.ListRuleGroupAlertRulesQuery{
 		OrgID:        c.SignedInUser.OrgId,
 		NamespaceUID: namespace.Uid,
@@ -212,7 +213,7 @@ func (srv RulerSrv) RouteGetRulesConfig(c *models.ReqContext) response.Response 
 }
 
 func (srv RulerSrv) RoutePostNameRulesConfig(c *models.ReqContext, ruleGroupConfig apimodels.PostableRuleGroupConfig) response.Response {
-	namespaceTitle := c.Params(":Namespace")
+	namespaceTitle := macaron.Vars(c.Req)[":Namespace"]
 	namespace, err := srv.store.GetNamespaceByTitle(namespaceTitle, c.SignedInUser.OrgId, c.SignedInUser, true)
 	if err != nil {
 		return toNamespaceErrorResponse(err)
